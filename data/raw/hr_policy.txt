@@ -1,0 +1,36 @@
+Acme Corporation - Employee Leave Policy
+
+1. Purpose
+This policy describes the types of leave available to employees of Acme Corporation
+and the process for requesting time off. It applies to all full-time and part-time
+employees who have completed their probation period.
+
+2. Annual Leave
+Full-time employees are entitled to 24 days of paid annual leave per calendar year.
+Annual leave accrues at a rate of 2 days per month. Unused leave of up to 5 days may
+be carried over into the following year; any excess is forfeited on 31 December.
+
+3. Sick Leave
+Employees are entitled to 12 days of paid sick leave per year. A medical certificate
+is required for any absence longer than two consecutive days. Sick leave does not
+carry over between years.
+
+4. Maternity Leave
+Eligible employees are entitled to 26 weeks of paid maternity leave. To qualify, an
+employee must have completed at least 12 months of continuous service before the
+expected date of delivery. Maternity leave may begin up to 4 weeks before the due
+date. Employees must notify their manager and the HR department at least 8 weeks in
+advance.
+
+5. Paternity Leave
+Employees are entitled to 2 weeks of paid paternity leave, to be taken within 8 weeks
+of the birth or adoption of a child.
+
+6. Requesting Leave
+All leave requests must be submitted through the HR portal at least 5 working days in
+advance, except in the case of emergency or illness. Managers are expected to approve
+or decline requests within 2 working days.
+
+7. Contact
+For questions about this policy, contact the People Operations team at
+hr@acme.example.

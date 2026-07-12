@@ -1,0 +1,151 @@
+# =============================================================================
+# Smart Research Assistant (RAG) - central configuration
+# -----------------------------------------------------------------------------
+# Every tunable parameter lives here so that no value is hardcoded in the source.
+# Values can be overridden at runtime (e.g. from Streamlit sliders) by passing an
+# override dict to `AppConfig.load(...)`; environment variables referenced with
+# the ${VAR} syntax are expanded on load.
+# =============================================================================
+
+project:
+  name: "Smart Research Assistant"
+  version: "0.1.0"
+
+paths:
+  data_raw: "data/raw"          # bundled sample documents
+  data_uploads: "data/uploads"  # files uploaded via the app
+  embeddings: "embeddings"      # embedding model cache lives here
+  vector_store: "vector_store"  # FAISS / Chroma indexes
+  logs: "logs"
+
+logging:
+  level: "INFO"
+  file: "rag_system.log"
+
+# ----------------------------------------------------------------------------
+# Ingestion: supported inputs and loader behaviour.
+# ----------------------------------------------------------------------------
+ingestion:
+  supported_extensions: [".pdf", ".txt", ".docx", ".md"]
+  # Requests settings for web-page ingestion.
+  web:
+    timeout_seconds: 20
+    user_agent: "SmartResearchAssistant/0.1 (+https://example.local)"
+    max_content_bytes: 5000000  # 5 MB safety cap on downloaded HTML
+
+# ----------------------------------------------------------------------------
+# Preprocessing / cleaning.
+# ----------------------------------------------------------------------------
+preprocessing:
+  lowercase: false            # keep original casing; embeddings are cased-aware
+  normalize_unicode: true
+  collapse_whitespace: true
+  strip_boilerplate: true     # drop repeated headers/footers & page markers
+  min_paragraph_chars: 3      # drop stray fragments shorter than this
+
+# ----------------------------------------------------------------------------
+# Chunking.
+# ----------------------------------------------------------------------------
+chunking:
+  strategy: "recursive"       # one of: recursive, fixed, sentence
+  chunk_size: 800             # target characters per chunk
+  chunk_overlap: 120          # character overlap between consecutive chunks
+  min_chunk_chars: 50         # discard chunks smaller than this after splitting
+  separators: ["\n\n", "\n", ". ", " ", ""]
+
+# ----------------------------------------------------------------------------
+# Embeddings. Multiple models are supported; `active` selects the default.
+# ----------------------------------------------------------------------------
+embeddings:
+  active: "minilm"
+  batch_size: 32
+  normalize: true             # L2-normalize so dot product == cosine similarity
+  device: "auto"              # auto -> cuda if available else cpu
+  cache_dir: "embeddings/model_cache"
+  models:
+    minilm:
+      provider: "sentence-transformers"
+      model_name: "sentence-transformers/all-MiniLM-L6-v2"
+      dimension: 384
+    mpnet:
+      provider: "sentence-transformers"
+      model_name: "sentence-transformers/all-mpnet-base-v2"
+      dimension: 768
+    bge-small:
+      provider: "sentence-transformers"
+      model_name: "BAAI/bge-small-en-v1.5"
+      dimension: 384
+
+# ----------------------------------------------------------------------------
+# Vector store. Both FAISS and ChromaDB are supported; `active` selects default.
+# ----------------------------------------------------------------------------
+vector_store:
+  active: "faiss"
+  collection_name: "smart_research_assistant"
+  faiss:
+    index_type: "flat_ip"     # inner-product flat index (cosine on normalized vecs)
+    persist_dir: "vector_store/faiss"
+  chroma:
+    persist_dir: "vector_store/chroma"
+    distance: "cosine"
+
+# ----------------------------------------------------------------------------
+# Retrieval.
+# ----------------------------------------------------------------------------
+retrieval:
+  top_k: 5
+  score_threshold: 0.0        # absolute cosine floor; keep all by default
+  # Query-adaptive floor: drop chunks scoring below this fraction of the best
+  # match. Prevents a weakly-related passage from diluting the LLM context when a
+  # strong match exists, while keeping all chunks when they are uniformly relevant.
+  # Kept gentle (0.3) so recall stays high for capable LLMs that tolerate mild noise;
+  # raise it toward 0.5 when using a small local model that is easily distracted.
+  relative_score_floor: 0.3
+  mmr:
+    enabled: false            # Maximal Marginal Relevance re-ranking
+    lambda: 0.5
+    fetch_k: 20
+
+# ----------------------------------------------------------------------------
+# Generation (LLM). Backend is pluggable: an OpenAI-compatible HTTP endpoint or
+# a fully-local HuggingFace model so the system runs with no API key.
+# ----------------------------------------------------------------------------
+generation:
+  backend: "auto"             # auto | openai | local
+  temperature: 0.2
+  max_tokens: 256             # max NEW tokens to generate for the answer
+  system_prompt_style: "grounded"   # enforce context-grounded answers
+  openai:
+    # Works with any OpenAI-compatible endpoint (OpenAI, Groq, Azure, Ollama, ...).
+    # Model + base_url + key are set here / via .env. Current: Groq Llama-4 Scout.
+    model: "${OPENAI_MODEL:-meta-llama/llama-4-scout-17b-16e-instruct}"
+    base_url: "${OPENAI_BASE_URL:-https://api.openai.com/v1}"
+    api_key: "${OPENAI_API_KEY:-}"
+    max_context_tokens: 8000  # generous context window for hosted models
+  local:
+    model_name: "google/flan-t5-base"
+    # FLAN-T5 has a 512-token encoder window; the prompt must fit inside it, so
+    # the context budget is derived from this. Oversized prompts get truncated and
+    # cause small models to repeat/copy, so keep this honest.
+    max_input_tokens: 512
+    # Anti-degeneration decoding for the small local model.
+    num_beams: 4
+    no_repeat_ngram_size: 3
+    repetition_penalty: 1.3
+
+# ----------------------------------------------------------------------------
+# Evaluation (RAGAS + lightweight built-in metrics).
+# ----------------------------------------------------------------------------
+evaluation:
+  metrics: ["faithfulness", "answer_relevancy", "context_precision", "context_recall"]
+  use_ragas: true             # falls back to built-in heuristics if RAGAS/LLM unavailable
+  sample_size: null           # null -> evaluate all provided samples
+
+# ----------------------------------------------------------------------------
+# Visualization defaults.
+# ----------------------------------------------------------------------------
+visualization:
+  projection_method: "pca"    # pca | tsne
+  tsne_perplexity: 30
+  max_points: 500
+  theme: "plotly_white"

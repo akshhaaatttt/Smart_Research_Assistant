@@ -1,0 +1,15 @@
+# Disable the file watcher: it walks module paths (including torch.classes) which
+# conflicts with PyTorch and can destabilize model loading. Turning it off also
+# avoids unnecessary reruns (and repeated model loads) on this memory-tight machine.
+[server]
+fileWatcherType = "none"
+
+[logger]
+level = "info"
+
+[theme]
+primaryColor = "#0d9488"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0fdfa"
+textColor = "#0f172a"
+font = "sans serif"
