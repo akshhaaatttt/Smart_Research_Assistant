@@ -113,7 +113,7 @@ retrieval:
 generation:
   backend: "auto"             # auto | openai | local
   temperature: 0.2
-  max_tokens: 256             # max NEW tokens to generate for the answer
+  max_tokens: 1024            # max NEW tokens (headroom for reasoning models like gpt-oss) to generate for the answer
   system_prompt_style: "grounded"   # enforce context-grounded answers
   openai:
     # Works with any OpenAI-compatible endpoint (OpenAI, Groq, Azure, Ollama, ...).

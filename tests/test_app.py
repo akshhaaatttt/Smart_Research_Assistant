@@ -5,11 +5,13 @@ exceptions and that the core user flow - load sample docs, then ask a question -
 produces a grounded, attributed answer through the real pipeline.
 """
 
+from pathlib import Path
+
 import pytest
 
 from streamlit.testing.v1 import AppTest
 
-APP = "app/streamlit_app.py"
+APP = str(Path(__file__).resolve().parents[1] / "app" / "streamlit_app.py")
 
 
 def _find_button(at, label_substr):
